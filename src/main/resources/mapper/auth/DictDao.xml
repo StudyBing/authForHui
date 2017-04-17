@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bing.water.auth.dao.DictDao">
+    
+	<sql id="DictColumns">
+		a.id AS "id",a.type AS "type",a.label AS "label",a.value AS "value",a.sort AS "sort",a.create_by AS "createBy",a.create_date AS "createDate",a.update_by AS "updateBy",a.update_date AS "updateDate",a.remarks AS "remarks",a.del_flag AS "delFlag"
+	</sql>
+
+	<select id="get" resultType="com.bing.water.auth.entity.Dict">
+		SELECT 
+			<include refid="DictColumns"/>
+		FROM sys_dict a
+		WHERE a.id = #{id}
+	</select>
+
+	<select id="findGroupType" resultType="java.lang.String">
+		SELECT type FROM sys_dict WHERE del_flag='0' GROUP BY type
+	</select>
+
+	<select id="findAll" resultType="com.bing.water.auth.entity.Dict">
+		SELECT 
+			<include refid="DictColumns"/>
+		FROM sys_dict a
+		<where>
+			a.del_flag = '0'
+		</where>		
+			ORDER BY a.update_date DESC
+	</select>
+	<!-- 分页模块 -->
+	<sql id="pageFromAndWhere">
+      FROM sys_dict a
+      <where>
+		a.del_flag = '0'
+		<if test="type != null and type != ''">
+			AND type = #{type}
+		</if>
+	  </where>
+    </sql>
+
+    <select id="pageCount" resultType="java.lang.Integer"
+            parameterType="com.bing.water.common.model.DtGridSearch">
+        select count(1)
+        <include refid="pageFromAndWhere"/>
+    </select>
+
+    <select id="pageList" resultType="com.bing.water.auth.entity.Dict"
+            parameterType="com.bing.water.common.model.DtGridSearch">
+        select
+			<include refid="DictColumns"/>
+        <include refid="pageFromAndWhere"/>
+		<choose>
+			<when test="sort != null and sort != ''">
+				ORDER BY ${sort}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+        limit #{startRecord},#{pageSize}
+    </select>
+	
+	<insert id="insert">
+		INSERT INTO sys_dict(
+		id,type,label,value,sort,create_by,create_date,update_by,update_date,remarks,del_flag
+		) VALUES (
+		#{id},#{type},#{label},#{value},#{sort},#{createBy},#{createDate},#{updateBy},#{updateDate},#{remarks},#{delFlag}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE sys_dict SET
+		id = #{id},type = #{type},label = #{label},value = #{value},sort = #{sort},create_by = #{createBy},create_date = #{createDate},update_by = #{updateBy},update_date = #{updateDate},remarks = #{remarks},del_flag = #{delFlag}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+	    UPDATE sys_dict SET del_flag = '1'
+	    WHERE id = #{id}
+	</update>
+	
+</mapper>

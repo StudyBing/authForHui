@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<template>
+	<name>dao</name>
+	<fileName>${ClassName}Dao.java</fileName>
+	<content><![CDATA[
+/**
+ * 
+ */
+package ${packageName}.${moduleName}.dao;
+
+import ${packageName}.common.model.BaseDao;
+import ${packageName}.${moduleName}.entity.${ClassName};
+
+/**
+ * ${functionName}DAO接口
+ * @author ${functionAuthor}
+ */
+public interface ${ClassName}Dao extends BaseDao<${ClassName}> {
+	
+}]]>
+	</content>
+</template>

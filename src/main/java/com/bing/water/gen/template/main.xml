@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<template>
+    <name>main</name>
+    <fileName>${ClassName}Main.java</fileName>
+    <content><![CDATA[
+/**
+ * 
+ */
+package ${packageName}.test.gen.${moduleName};
+
+import com.google.common.collect.Maps;
+import ${packageName}.gen.model.GenTable;
+import ${packageName}.gen.model.GenColumn;
+import ${packageName}.gen.utils.ConvertUtils;
+import ${packageName}.gen.utils.GenUtils;
+import org.apache.commons.lang3.StringUtils;
+
+import java.util.Map;
+/**
+ * ${functionName}
+ * @author ${functionAuthor}
+ */
+public class ${ClassName}Main {
+
+	private static String[][] columns = new String[][]{
+	<#list table.columns as c>
+	{/*列名:*/"${c.name}",/*描述:*/"${c.comments}",/*JDBC类型:*/"${c.jdbcType}",/*JAVA类型:*/"${c.javaType}",/*JAVA字段名:*/"${c.javaField}",
+	 /*是否主键:*/"${c.pk}",/*是否编辑:*/"${c.edit}",/*是否列表:*/"${c.list}",/*是否查询:*/"${c.query}",/*查询方式:*/${c.queryType},
+	 /*显示方式:*/${c.showType},/*字典类型:*/"${c.dictType}",/*校验器:*/"${c.validators}"/*(多个#号隔开)*/,/*字段长度:*/"<#if c.length ??>${c.length}</#if>"}<#if c_index &lt; table.columns?size-1>,</#if>
+	</#list>
+    };
+
+    public static void main(String[] args) {
+        Map<String, Object> configs = Maps.newHashMap();
+        configs.put("packageName", "${packageName}"); //基础包路径
+        configs.put("moduleName", "${moduleName}");  //模块名
+        configs.put("entityType","${entityType}"); //tree为树机构，grid为表格格式
+        configs.put("schema", "${schema}");     //库名称
+        configs.put("tableName", "${tableName}"); //表名称
+        configs.put("ClassName", "${ClassName}"); //java实体类名
+        configs.put("functionName", "${functionName}"); //表功能
+        configs.put("functionAuthor", "${functionAuthor}");//作者
+
+        GenTable table = new GenTable();
+        table.setSchema("${schema}");
+        table.setTable("${tableName}");
+        GenUtils.parseTableColumn(table, columns);
+        configs.put("table", table);
+
+        //生成实体
+        GenUtils.genJavaFile(configs, "entity", "entity");
+        //生成DAO对象
+        GenUtils.genJavaFile(configs, "dao", "dao");
+        //生成DAO的xml
+        GenUtils.genMybatisXml(configs);
+        <#if "${serviceFlag}" == "1">
+        //生成搜索VO的xml
+        GenUtils.genJavaFile(configs, "search", "vo");
+        //生成Service
+        GenUtils.genJavaFile(configs, "service", "service");
+            <#if "${webFlag}" == "1">
+        //生成Controller
+        GenUtils.genJavaFile(configs, "controller", "web");
+        //生成List页面
+        <#if "${entityType}" == "tree">
+        GenUtils.genJspFile(configs, "tree");
+        <#else>
+        GenUtils.genJspFile(configs, "list");
+        </#if>
+        //生成Form页面
+        GenUtils.genJspFile(configs, "form");
+            </#if>
+        </#if>
+    }
+
+}]]>
+    </content>
+</template>

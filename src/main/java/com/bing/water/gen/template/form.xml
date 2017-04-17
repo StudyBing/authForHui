@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<template>
+	<name>form</name>
+	<fileName>${ClassName?uncap_first}Form.jsp</fileName>
+	<content><![CDATA[
+<%@ page contentType="text/html;charset=UTF-8" %>
+<%@ include file="/WEB-INF/include/taglib.jsp" %>
+<!DOCTYPE HTML>
+<html style="height: auto;">
+<head>
+	<meta charset="utf-8">
+	<%@include file="/WEB-INF/include/head.jsp" %>
+	<%@include file="/WEB-INF/include/validation.jsp" %>
+	<title>${functionName}维护</title>
+	<script type="text/javascript">
+		var layerLoadIndex = undefined;
+		function beforeCall(form, options){
+			layerLoadIndex = layer.load();
+			return true;
+		}
+		function ajaxValidationCallback(status, form, result, options){
+			layer.close(layerLoadIndex);
+			if(status === true){
+				if (result.ok){
+					var index = parent.layer.getFrameIndex(window.name);
+					if(index != undefined) {
+						parent.layer.msg(result.msg, {icon: 6});
+						parent.layer.close(index);
+					} else {
+						Hui_update_iframe("${functionName}列表","${"$"}{ctx}/${ClassName?uncap_first}/list");
+					}
+				} else {
+					layer.msg(result.msg, {icon: 5});
+				}
+			} else {
+				layer.msg('保存失败', {icon: 5});
+			}
+		}
+		$(document).ready(function(){
+			jQuery('#submitForm').validationEngine({
+				ajaxFormValidation: true,
+				promptPosition: "centerRight",
+				ajaxFormValidationMethod: 'post',
+				onAjaxFormComplete: ajaxValidationCallback,
+				onBeforeAjaxFormValidation: beforeCall
+			});
+		});
+	</script>
+</head>
+<body>
+<div class="page-container" style="margin: 10px;background-color: #fff; border: 1px solid #ddd;border-radius: 4px;">
+	<form id="submitForm" action="${"$"}{ctx}/${ClassName?uncap_first}/save" method="post" class="form form-horizontal">
+		<input type="hidden" name="id" value="${"$"}{${ClassName?uncap_first}.id}"/>
+		<%@include file="/WEB-INF/include/token.jsp" %>
+		<legend>${functionName}维护</legend>
+		<#list table.columns as c>
+		<#if c.edit?? && c.edit == "1">
+		<div class="row cl">
+			<label class="form-label col-xs-4 col-sm-3"><#if c.comments??>${c.comments}</#if>：</label>
+			<div class="formControls col-xs-8 col-sm-6">
+			<#if c.showType == "input">
+				<input name="${c.javaField}" value="${"$"}{${ClassName?uncap_first}.${c.javaField}}" type="text" class="<#if c.jsValidator??>${c.jsValidator}</#if> input-text" placeholder="<#if c.comments??>${c.comments}</#if>">
+			<#elseif c.showType == "textarea">
+				<textarea name="${c.javaField}" cols="" rows="" class="<#if c.jsValidator??>${c.jsValidator}</#if> textarea">${"$"}{${ClassName?uncap_first}.${c.javaField}}</textarea>
+			<#elseif c.showType == "select">
+				<span class="select-box">
+					<select name="${c.javaField}" value="${"$"}{${ClassName?uncap_first}.${c.javaField}}" class="<#if c.jsValidator??>${c.jsValidator}</#if> select">
+					</select>
+				</span>
+			<#elseif c.showType == "checkbox">
+			<#elseif c.showType == "radio">
+			<#elseif c.showType == "date">
+				<input name="${c.javaField}" value="<fmt:formatDate value="${"$"}{${ClassName?uncap_first}.${c.javaField}}" type="text" onfocus="WdatePicker()"  class="input-text Wdate">
+			<#elseif c.showType == "user">
+			<#elseif c.showType == "organ">
+			</#if>
+			</div>
+		</div>
+		</#if>
+		</#list>
+		<div class="row cl">
+			<div class="col-xs-8 col-sm-9 col-xs-offset-4 col-sm-offset-3">
+				<input class="btn btn-primary radius" type="submit" value="提交">
+			</div>
+		</div>
+	</form>
+</div>
+</body>
+</html>
+]]>
+	</content>
+</template>

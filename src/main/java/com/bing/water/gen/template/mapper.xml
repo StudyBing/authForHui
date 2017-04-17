@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="utf-8"?>
+<template>
+	<name>mapper</name>
+	<fileName>${ClassName}Dao.xml</fileName>
+	<content><![CDATA[
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="${packageName}.${moduleName}.dao.${ClassName}Dao">
+    
+    <#-- 输出字段列 -->
+	<sql id="${ClassName}Columns">
+		<#list table.columns as c>a.${c.name} AS "${c.javaField}"<#if c_index &lt; table.columns?size-1>,</#if></#list>
+	</sql>
+
+	<select id="get" resultType="${packageName}.${moduleName}.entity.${ClassName}">
+		SELECT 
+			<include refid="${ClassName}Columns"/>
+		FROM ${table.name} a
+		WHERE<#list table.columnPks as p><#if (p_index > 0)> and</#if> a.${p.name} = ${"#"}{${p.javaField}}</#list>
+	</select>
+
+	<select id="findAll" resultType="${packageName}.${moduleName}.entity.${ClassName}">
+		SELECT 
+			<include refid="${ClassName}Columns"/>
+		FROM ${table.name} a
+		<where>
+			<#if table.delFlagExists>a.del_flag = '0'</#if>
+		</where>		
+		<#if table.updateDateExists>
+			ORDER BY a.update_date DESC
+		</#if>
+	</select>
+	<!-- 分页模块 -->
+	<sql id="pageFromAndWhere">
+      FROM ${table.name} a
+      <where>
+		<#if table.delFlagExists>a.del_flag = '0'</#if>
+		<#list table.columns as c>
+			<#if (c.query?? && c.query == "1")>
+				<#if c.queryType == "between">
+		<if test="begin${c.javaField?cap_first} != null">
+		AND a.${c.name} &gt;= ${"#"}{begin${c.javaField?cap_first}}
+		</if>
+		<if test="end${c.javaField?cap_first} != null">
+		AND a.${c.name} &lt; ${"#"}{end${c.javaField?cap_first}}
+		</if>
+				<#else>
+		<if test="${c.javaField} != null and ${c.javaField} != ''">
+				<#if c.queryType == 'like'>
+		AND a.${c.name} LIKE concat('%',${"#"}{${c.javaField}},'%')
+				<#elseif c.queryType == 'left_like'>
+		AND a.${c.name} LIKE concat('%',${"#"}{${c.javaField}})
+				<#elseif c.queryType == 'right_like'>
+		AND a.${c.name} LIKE concat(${"#"}{${c.javaField}},'%')
+				<#else>
+		AND a.${c.name} ${c.queryType} ${"#"}{${c.javaField}}
+				</#if>
+		</if>
+				</#if>
+			</#if>
+		</#list>
+	  </where>
+    </sql>
+
+    <select id="pageCount" resultType="java.lang.Integer"
+            parameterType="${packageName}.common.model.DtGridSearch">
+        select count(1)
+        <include refid="pageFromAndWhere"/>
+    </select>
+
+    <select id="pageList" resultType="${packageName}.${moduleName}.entity.${ClassName}"
+            parameterType="${packageName}.common.model.DtGridSearch">
+        select
+			<include refid="${ClassName}Columns"/>
+        <include refid="pageFromAndWhere"/>
+		<choose>
+			<when test="sort != null and sort != ''">
+				ORDER BY ${"$"}{sort}
+			</when>
+			<otherwise>
+				<#if table.updateDateExists>
+				ORDER BY a.update_date DESC
+				</#if>
+			</otherwise>
+		</choose>
+        limit ${"#"}{startRecord},${"#"}{pageSize}
+    </select>
+	
+	<insert id="insert">
+		INSERT INTO ${table.name}(
+		<#list table.columns as c>${c.name}<#if c_index &lt; table.columns?size-1>,</#if></#list>
+		) VALUES (
+		<#list table.columns as c>${"#"}{${c.javaField}}<#if c_index &lt; table.columns?size-1>,</#if></#list>
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE ${table.name} SET
+		<#list table.columns as c>${c.name} = ${"#"}{${c.javaField}}<#if c_index &lt; table.columns?size-1>,</#if></#list>
+		WHERE<#list table.columnPks as p><#if (p_index > 0)> and</#if> ${p.name} = ${"#"}{${p.javaField}}</#list>
+	</update>
+	
+	<update id="delete">
+	<#if table.delFlagExists>
+	    UPDATE ${table.name} SET del_flag = '1'
+	<#else>
+		DELETE FROM ${table.name}
+	</#if>
+	    WHERE<#list table.columnPks as p><#if (p_index > 0)> and</#if> ${p.name} = ${"#"}{${p.javaField}}</#list>
+	</update>
+	
+</mapper>]]>
+	</content>
+</template>

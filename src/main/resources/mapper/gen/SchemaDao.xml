@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bing.water.gen.dao.SchemaDao">
+  <resultMap id="BaseResultMap" type="com.bing.water.gen.model.DbColumn">
+    <id column="COLUMN_NAME" jdbcType="VARCHAR" property="name" />
+    <id column="DATA_TYPE" jdbcType="VARCHAR" property="type" />
+    <id column="CHARACTER_MAXIMUM_LENGTH" jdbcType="VARCHAR" property="length" />
+    <id column="IS_NULLABLE" jdbcType="VARCHAR" property="isNull" />
+    <id column="COLUMN_KEY" jdbcType="VARCHAR" property="colKey" />
+    <id column="COLUMN_COMMENT" jdbcType="VARCHAR" property="comment" />
+  </resultMap>
+
+  <select id="findColumns" parameterType="java.lang.String" resultMap="BaseResultMap">
+    select COLUMN_NAME,DATA_TYPE,CHARACTER_MAXIMUM_LENGTH,IS_NULLABLE,COLUMN_KEY,COLUMN_COMMENT
+    from information_schema.COLUMNS where table_schema=#{schema} AND table_name=#{tableName}
+  </select>
+
+</mapper>

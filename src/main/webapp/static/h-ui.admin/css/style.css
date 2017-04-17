@@ -1,0 +1,43 @@
+@charset "utf-8";
+/* 你自己的样式 */
+
+/*表格样式*/
+.dt-grid-container>.table{margin:0;}
+.bg-primary {color: #fff;background-color: #337ab7;}
+.dt-grid-pager a{height:16px;}
+.table>thead>tr>td:hover,.table>tbody>tr>td:hover,.table>tfoot>tr>td:hover,.dt-grid-extra-columns>td>p:hover{background: none;}
+.table-hover>tbody>tr>td:hover{background: #dcf8ff;}
+.pagination>li{display:inline}
+.pagination>li>a,.pagination>li>span{position:relative;float:left;padding:6px 12px;margin-left:-1px;line-height:1.42857143;color:#5a98de;text-decoration:none;background-color:#fff;border:1px solid #ddd}
+.pagination>li:first-child>a,.pagination>li:first-child>span{margin-left:0;border-top-left-radius:4px;border-bottom-left-radius:4px}
+.pagination>li:last-child>a,.pagination>li:last-child>span{border-top-right-radius:4px;border-bottom-right-radius:4px}
+.pagination>li>a:focus,.pagination>li>a:hover,.pagination>li>span:focus,.pagination>li>span:hover{z-index:3;color:#23527c;background-color:#eee;border-color:#ddd}
+.pagination>.active>a,.pagination>.active>a:focus,.pagination>.active>a:hover,.pagination>.active>span,.pagination>.active>span:focus,.pagination>.active>span:hover{z-index:2;color:#fff;cursor:default;background-color:#5a98de ;border-color:#5a98de}
+.pagination>.disabled>a,.pagination>.disabled>a:focus,.pagination>.disabled>a:hover,.pagination>.disabled>span,.pagination>.disabled>span:focus,.pagination>.disabled>span:hover{color:#777;cursor:not-allowed;background-color:#fff;border-color:#ddd}
+.pagination-lg>li>a,.pagination-lg>li>span{padding:10px 16px;font-size:18px;line-height:1.3333333}
+.pagination-lg>li:first-child>a,.pagination-lg>li:first-child>span{border-top-left-radius:6px;border-bottom-left-radius:6px}
+.pagination-lg>li:last-child>a,.pagination-lg>li:last-child>span{border-top-right-radius:6px;border-bottom-right-radius:6px}
+.pagination-sm>li>a,.pagination-sm>li>span{padding:5px 10px;font-size:12px;line-height:1.5}
+.pagination-sm>li:first-child>a,.pagination-sm>li:first-child>span{border-top-left-radius:3px;border-bottom-left-radius:3px}
+.pagination-sm>li:last-child>a,.pagination-sm>li:last-child>span{border-top-right-radius:3px;border-bottom-right-radius:3px}
+.pager{padding-left:0;margin:20px 0;text-align:center;list-style:none}
+.pager li{display:inline}
+.pager li>a,.pager li>span{display:inline-block;padding:5px 14px;background-color:#fff;border:1px solid #ddd;border-radius:15px}
+.pager li>a:focus,.pager li>a:hover{text-decoration:none;background-color:#eee}
+.pager .next>a,.pager .next>span{float:right}
+.pager .previous>a,.pager .previous>span{float:left}
+.pager .disabled>a,.pager .disabled>a:focus,.pager .disabled>a:hover,.pager .disabled>span{color:#777;cursor:not-allowed;background-color:#fff}
+
+.dislpayArrow{left:160px;}
+.Hui-aside{width: 160px;}
+.Hui-article-box{left:160px;}
+.page-container{margin: 10px;background-color: #fff;border: 1px solid #ddd;border-radius: 4px;}
+.zTreeContent{display:none; position: absolute;background-color: white;z-index: 99;border: 1px #999 solid;height: 300px;width: 230px;overflow-y: auto;}
+a.btn, a.btn.size-M, span.btn, span.btn.size-M {line-height: 19px;}
+td.check-column.text-center {text-align: center;}
+
+
+.select2-container--default .select2-selection--single {
+    border: 1px solid #DDD !important;
+    border-radius: 0px !important;;
+}

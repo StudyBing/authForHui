@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bing.water.auth.dao.OrganDao">
+
+    <sql id="OrganColumns">
+		a.id AS "id",a.code AS "code",a.name AS "name",a.del_flag AS "delFlag",a.create_date AS "createDate",a.create_by AS "createBy",a.update_date AS "updateDate",a.update_by AS "updateBy",a.remarks AS "remarks"
+	</sql>
+
+    <select id="get" resultType="com.bing.water.auth.entity.Organ">
+        SELECT
+        <include refid="OrganColumns"/>
+        FROM sys_organ a
+        WHERE a.id = #{id}
+    </select>
+
+    <select id="findByOrgCode" resultType="com.bing.water.auth.entity.Organ">
+        SELECT
+        <include refid="OrganColumns"/>
+        FROM sys_organ a
+        WHERE a.del_flag = '0' AND code = #{orgCode}
+    </select>
+    <select id="findByUserId" resultType="com.bing.water.auth.entity.Organ">
+        SELECT
+        <include refid="OrganColumns"/>
+        FROM sys_organ a
+        JOIN sys_user u ON u.org_code = a.code
+        WHERE a.del_flag='0' AND u.del_flag='0' AND u.id=#{userId}
+    </select>
+    <select id="findOrgansByRoles" resultType="com.bing.water.auth.entity.Organ">
+        SELECT
+        <include refid="OrganColumns"/>
+        FROM sys_organ a
+        JOIN sys_role_organ ro ON ro.org_id = a.id
+        WHERE a.del_flag='0' AND ro.role_id in
+        <foreach collection="roles" open="(" close=")" item="role" separator=",">
+            #{role.id}
+        </foreach>
+    </select>
+
+    <select id="findByName" resultType="com.bing.water.auth.entity.Organ">
+        SELECT
+        <include refid="OrganColumns"/>
+        FROM sys_organ a
+        <where>
+            a.del_flag = '0' AND a.name=#{name}
+        </where>
+    </select>
+    <select id="findAll" resultType="com.bing.water.auth.entity.Organ">
+        SELECT
+        <include refid="OrganColumns"/>
+        FROM sys_organ a
+        <where>
+            a.del_flag = '0'
+        </where>
+        ORDER BY a.update_date DESC
+    </select>
+    <!-- 分页模块 -->
+    <sql id="pageFromAndWhere">
+        FROM sys_organ a
+        <where>
+            a.del_flag = '0'
+            <if test="code != null and code != ''">
+                AND a.code LIKE concat('%',#{code},'%')
+            </if>
+            <if test="name != null and name != ''">
+                AND a.name LIKE concat('%',#{name},'%')
+            </if>
+        </where>
+    </sql>
+
+    <select id="pageCount" resultType="java.lang.Integer"
+            parameterType="com.bing.water.common.model.DtGridSearch">
+        select count(1)
+        <include refid="pageFromAndWhere"/>
+    </select>
+
+    <select id="pageList" resultType="com.bing.water.auth.entity.Organ"
+            parameterType="com.bing.water.common.model.DtGridSearch">
+        select
+        <include refid="OrganColumns"/>
+        <include refid="pageFromAndWhere"/>
+        <choose>
+            <when test="sort != null and sort != ''">
+                ORDER BY ${sort}
+            </when>
+            <otherwise>
+                ORDER BY a.update_date DESC
+            </otherwise>
+        </choose>
+        limit #{startRecord},#{pageSize}
+    </select>
+
+    <insert id="insert">
+		INSERT INTO sys_organ(
+		id,code,name,del_flag,create_date,create_by,update_date,update_by,remarks
+		) VALUES (
+		#{id},#{code},#{name},#{delFlag},#{createDate},#{createBy},#{updateDate},#{updateBy},#{remarks}
+		)
+	</insert>
+
+    <update id="update">
+		UPDATE sys_organ SET
+		id = #{id},code = #{code},name = #{name},del_flag = #{delFlag},create_date = #{createDate},create_by = #{createBy},update_date = #{updateDate},update_by = #{updateBy},remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+
+    <update id="delete">
+	    UPDATE sys_organ SET del_flag = '1'
+	    WHERE id = #{id}
+	</update>
+
+</mapper>

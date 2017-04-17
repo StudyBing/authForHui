@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="utf-8"?>
+<template>
+	<name>list</name>
+	<fileName>${ClassName?uncap_first}List.jsp</fileName>
+	<content><![CDATA[
+<%@ page contentType="text/html;charset=UTF-8" %>
+<%@ include file="/WEB-INF/include/taglib.jsp" %>
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<%@include file="/WEB-INF/include/head.jsp" %>
+		<%@include file="/WEB-INF/include/dtgrid.jsp" %>
+		<title>${functionName}列表</title>
+	</head>
+	<body>
+		<nav class="breadcrumb"><i class="Hui-iconfont">&#xe67f;</i> 首页 <span class="c-gray en">&gt;</span> ${functionName}列表
+			<a class="btn btn-success radius r" style="margin-top:3px" href="javascript:location.replace(location.href);" title="刷新"><i class="Hui-iconfont">&#xe68f;</i></a>
+			<shiro:hasPermission name="${moduleName}:${ClassName?uncap_first}:save">
+			<a class="btn btn-success radius r" style="margin-top:3px;margin-right:10px;" href="javascript:editRow();" title="新增"><i class="Hui-iconfont">&#xe604;</i></a>
+			</shiro:hasPermission>
+		</nav>
+		<div class="page-container">
+			<div class="cl pd-5 bg-1 bk-gray">
+			<#list table.searchCols as t>
+				<div class="row cl">
+				<#list t as c>
+					<label class="form-label col-xs-2 col-sm-2" style="text-align: right;"><#if c.comments??>${c.comments}</#if>：</label>
+					<div class="formControls col-xs-3 col-sm-2">
+					<#if c.showType == "input" || c.showType == "textarea">
+						<input id="${c.javaField}" type="text" class="input-text">
+					<#elseif c.showType == "select">
+						<span class="select-box">
+							<select id="${c.javaField}" class="select">
+							</select>
+						</span>
+					<#elseif c.showType == "checkbox">
+					<#elseif c.showType == "radio">
+					<#elseif c.showType == "date">
+						<input id="begin${c.javaField?cap_first}" type="text" onfocus="WdatePicker({maxDate:'#F{$dp.$D(\'end${c.javaField?cap_first}\')||\'%y-%M-%d\'}'})"  class="input-text Wdate" style="width:120px;"> -
+						<input id="end${c.javaField?cap_first}" type="text" onfocus="WdatePicker({minDate:'#F{$dp.$D(\'begin${c.javaField?cap_first}\')}',maxDate:'%y-%M-%d'})" class="input-text Wdate" style="width:120px;">
+					<#elseif c.showType == "user">
+					<#elseif c.showType == "organ">
+					</#if>
+					</div>
+				</#list>
+					<input onclick="search();" class="btn btn-primary radius" type="button" value="搜索">
+				</div>
+			</#list>
+			</div>
+			<div class="mt-20">
+				<div id="toolbarContainer" class="dt-grid-toolbar-container"></div>
+				<div id="gridContainer" class="dt-grid-container" style="width: 100%;"></div>
+				<div id="gridToolContainer" class="dt-grid-toolbar-container"></div>
+			</div>
+		</div>
+		<script type="text/javascript">
+			var grid = $.fn.DtGrid.init({
+		 		lang : 'zh-cn',
+		 		ajaxLoad : true,
+		 		check:false,
+			    loadURL : '${"$"}{ctx}/${ClassName?uncap_first}/data',
+			    tableClass :'table table-border table-bordered table-hover table-bg',
+		 		exportFileName : '${functionName}列表',
+		 		columns :  [
+					<#list table.columns as c>
+		 			<#if c.list == "1">
+				    {id:'${c.javaField}', title:'<#if c.comments??>${c.comments}</#if>', type:'string', columnClass:'text-c'},
+		 			</#if>
+		 			</#list>
+				    {id:"opter",title:"操作",columnClass:'text-c',resolution:function(value,record,column,grid,dataNo,columnNo){
+				    	var content = '';
+				    	<shiro:hasPermission name="${moduleName}:${ClassName?uncap_first}:form">
+				    	content += ' <input onclick="viewRow(\''+record.id+'\');" value="详情" class="btn btn-primary size-MINI radius" type="button">';
+				    	</shiro:hasPermission>
+				    	<shiro:hasPermission name="${moduleName}:${ClassName?uncap_first}:save">
+						content += ' <input onclick="editRow(\''+record.id+'\');" value="修改" class="btn btn-primary size-MINI radius" type="button">';
+				    	</shiro:hasPermission>
+				    	<shiro:hasPermission name="${moduleName}:${ClassName?uncap_first}:del">
+						content += ' <input onclick="deleteRow(\''+record.id+'\');" value="删除" class="btn btn-primary size-MINI radius" type="button">';
+				    	</shiro:hasPermission>
+				        return content;
+				    }}
+				],
+		 		gridContainer : 'gridContainer',
+				toolbarContainer : 'gridToolContainer',
+				tools : 'refresh',
+				pageSize : 10,
+				pageSizeLimit : [10, 20, 50],
+				onHeaderClick : function(title,column,grid,columnNo,header,headerRow,e) {
+					var sortParameter = grid.sortParameter;
+					if (grid.parameters == null || grid.parameters == undefined) {
+						grid.parameters = {};
+					}
+					grid.parameters['sortColumn'] = column.id;
+					var sortType  = sortParameter.sortType; //排序类别 [0-不排序，1-正序，2-倒序]
+                    if(sortParameter.columnId != column.id){
+                        sortType = 0;
+                    }
+					if(sortType == 2) {
+						grid.parameters['sortType'] = 0;
+					} else {
+						grid.parameters['sortType'] = sortType + 1;
+					}
+					grid.refresh(true);
+				}
+		 	});
+			$(function() {
+			 	search();
+			});
+			function search(){
+				if (grid.parameters == undefined || grid.parameters == null){
+					grid.parameters = {};
+				}
+				//使用手动方式进行DtGrid进行排序
+				var sortParameter = grid.sortParameter;
+				grid.parameters['sortColumn'] = sortParameter.columnId;
+				grid.parameters['sortType'] = sortParameter.sortType; //排序类别 [0-不排序，1-正序，2-倒序]
+
+				<#list table.searchCols as t>
+					<#list t as c>
+						<#if c.showType == "date">
+				grid.parameters['begin${c.javaField?cap_first}'] = $("#begin${c.javaField?cap_first}").val();
+				grid.parameters['end${c.javaField?cap_first}'] = $("#end${c.javaField?cap_first}").val();
+						<#else>
+				grid.parameters['${c.javaField}'] = $("#${c.javaField}").val();
+						</#if>
+					</#list>
+				</#list>
+				grid.refresh(true);
+			}
+
+		 	function viewRow(id){
+				if (id == undefined){
+					id = "";
+				}
+				var index = layer.open({
+				  type: 2,
+				  content: '${"$"}{ctx}/${ClassName?uncap_first}/form?id='+id,
+				  area: ['320px', '195px'],
+				  maxmin: true
+				});
+				layer.full(index);
+		 	}
+
+		 	function editRow(id){
+				if (id == undefined){
+					id = "";
+				}
+				var index = layer.open({
+				  type: 2,
+				  content: '${"$"}{ctx}/${ClassName?uncap_first}/form?id='+id,
+				  area: ['320px', '195px'],
+				  maxmin: true,
+				  end:function(){
+				  	search();
+				  }
+				});
+				layer.full(index);
+		 	}
+
+		 	function deleteRow(id){
+				if (id == undefined){
+					id = "";
+				}
+				layer.confirm('确认删除吗？', {
+					btn: ['确认','取消'], //按钮
+					icon: 5,
+					title:"提示"
+				}, function(){
+					$.ajax({
+						url: "${"$"}{ctx}/${ClassName?uncap_first}/del",
+						data:{"id":id} ,
+						dataType: "json",
+						success: function (res) {
+							if (res.ok) {
+								search();
+								layer.msg('删除成功', {icon: 6});
+							} else {
+								layer.msg("删除失败，请稍后再试！");
+							}
+						}
+					});
+				});
+		 	}
+
+		</script>
+	</body>
+</html>
+]]>
+	</content>
+</template>

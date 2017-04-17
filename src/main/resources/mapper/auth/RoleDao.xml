@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bing.water.auth.dao.RoleDao">
+    
+	<sql id="RoleColumns">
+		a.id AS "id",a.name AS "name",a.data_scope AS "dataScope",a.del_flag AS "delFlag",a.create_date AS "createDate",a.create_by AS "createBy",a.update_date AS "updateDate",a.update_by AS "updateBy",a.remarks AS "remarks"
+	</sql>
+
+	<select id="get" resultType="com.bing.water.auth.entity.Role">
+		SELECT 
+			<include refid="RoleColumns"/>
+		FROM sys_role a
+		WHERE a.id = #{id}
+	</select>
+
+	<select id="findAll" resultType="com.bing.water.auth.entity.Role">
+		SELECT 
+			<include refid="RoleColumns"/>
+		FROM sys_role a
+		<where>
+			a.del_flag = '0'
+		</where>		
+			ORDER BY a.update_date DESC
+	</select>
+	<select id="findRolesByPermission" resultType="com.bing.water.auth.entity.Role">
+		SELECT distinct
+			<include refid="RoleColumns"/>
+		FROM sys_role a
+		JOIN sys_role_user ru ON ru.role_id = a.id
+		JOIN sys_role_menu rm ON rm.role_id = a.id
+		JOIN sys_menu m ON m.id = rm.menu_id
+		where a.del_flag='0' and m.del_flag='0' and ru.user_id=#{userId} and m.permission=#{permission}
+		ORDER BY a.update_date DESC
+	</select>
+	<select id="findByName" resultType="com.bing.water.auth.entity.Role">
+		SELECT
+		<include refid="RoleColumns"/>
+		FROM sys_role a
+		<where>
+			a.del_flag = '0' AND a.name=#{name}
+		</where>
+	</select>
+	<!-- 分页模块 -->
+	<sql id="pageFromAndWhere">
+      FROM sys_role a
+      <where>
+		a.del_flag = '0'
+		<if test="name != null and name != ''">
+		AND a.name LIKE concat('%',#{name},'%')
+		</if>
+		<if test="userId != null and userId != ''">
+		AND (a.create_by = #{userId} OR EXISTS (SELECT 1 FROM sys_role_user t WHERE t.role_id = a.id AND t.user_id = #{userId}))
+		</if>
+	  </where>
+    </sql>
+
+    <select id="pageCount" resultType="java.lang.Integer"
+            parameterType="com.bing.water.common.model.DtGridSearch">
+        select count(1)
+        <include refid="pageFromAndWhere"/>
+    </select>
+
+    <select id="pageList" resultType="com.bing.water.auth.entity.Role"
+            parameterType="com.bing.water.common.model.DtGridSearch">
+        select
+			<include refid="RoleColumns"/>
+        <include refid="pageFromAndWhere"/>
+		<choose>
+			<when test="sort != null and sort != ''">
+				ORDER BY ${sort}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+        limit #{startRecord},#{pageSize}
+    </select>
+	
+	<insert id="insert">
+		INSERT INTO sys_role(
+		id,name,data_scope,del_flag,create_date,create_by,update_date,update_by,remarks
+		) VALUES (
+		#{id},#{name},#{dataScope},#{delFlag},#{createDate},#{createBy},#{updateDate},#{updateBy},#{remarks}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE sys_role SET
+		id = #{id},name = #{name},data_scope = #{dataScope},del_flag = #{delFlag},create_date = #{createDate},create_by = #{createBy},update_date = #{updateDate},update_by = #{updateBy},remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+	    UPDATE sys_role SET del_flag = '1'
+	    WHERE id = #{id}
+	</update>
+
+	<insert id="insertRoleMenu">
+		INSERT INTO sys_role_menu(role_id,menu_id) VALUES (#{roleId},#{menuId})
+	</insert>
+
+	<update id="deleteRoleMenu">
+		DELETE FROM sys_role_menu WHERE role_id = #{roleId}
+	</update>
+
+	<update id="deleteRoleUser">
+		DELETE FROM sys_role_user WHERE role_id = #{roleId} AND user_id = #{userId}
+	</update>
+
+	<select id="findMenuIdsByRoleId" resultType="java.lang.String">
+		SELECT menu_id FROM sys_role_menu WHERE role_id = #{roleId}
+	</select>
+
+	<insert id="insertRoleOrgan">
+		INSERT INTO sys_role_organ(role_id,org_id) VALUES (#{roleId},#{orgId})
+	</insert>
+
+	<update id="deleteRoleOrgan">
+		DELETE FROM sys_role_organ WHERE role_id = #{roleId}
+	</update>
+
+	<select id="findOrganIdsByRoleId" resultType="java.lang.String">
+		SELECT org_id FROM sys_role_organ WHERE role_id = #{roleId}
+	</select>
+
+	<insert id="insertRoleSystem">
+		INSERT INTO sys_system_role(role_id,system_id) VALUES (#{roleId},#{systemId})
+	</insert>
+
+	<update id="deleteRoleSystem">
+		DELETE FROM sys_system_role WHERE role_id = #{roleId}
+	</update>
+
+	<select id="findSystemIdsByRoleId" resultType="java.lang.String">
+		SELECT system_id FROM sys_system_role WHERE role_id = #{roleId}
+	</select>
+
+	<select id="findRolesByUser" resultType="com.bing.water.auth.entity.Role">
+		SELECT
+		<include refid="RoleColumns"/>
+		FROM sys_role a JOIN sys_role_user ru ON a.id = ru.role_id
+		<where>
+			a.del_flag = '0' AND (ru.user_id = #{id} OR a.create_by = #{id})
+		</where>
+	</select>
+
+</mapper>

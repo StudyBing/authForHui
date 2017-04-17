@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="utf-8"?>
+<template>
+	<name>list</name>
+	<fileName>${ClassName?uncap_first}List.jsp</fileName>
+	<content><![CDATA[
+<%@ page contentType="text/html;charset=UTF-8" %>
+<%@ include file="/WEB-INF/include/taglib.jsp" %>
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<%@include file="/WEB-INF/include/head.jsp" %>
+		<link rel="stylesheet" type="text/css" href="${"$"}{ctxStatic}/lib/treeTable/themes/vsStyle/treeTable.min.css" />
+		<script type="text/javascript" src="${"$"}{ctxStatic}/lib/treeTable/jquery.treeTable.min.js"></script>
+		<title>${functionName}列表</title>
+	</head>
+	<body>
+		<nav class="breadcrumb"><i class="Hui-iconfont">&#xe67f;</i> 首页 <span class="c-gray en">&gt;</span> ${functionName}列表 <a class="btn btn-success radius r" style="margin-top:3px" href="javascript:location.replace(location.href);" title="刷新"><i class="Hui-iconfont">&#xe68f;</i></a></nav>
+		<div class="page-container">
+			<table id="treeTable" class="dt-grid table table-border table-bordered table-hover table-bg">
+				<thead>
+					<tr>
+					<#list table.columns as c>
+					<#if c.list?? && c.list == "1">
+						<th><#if c.comments??>${c.comments}</#if></th>
+					</#if>
+					</#list>
+						<th>操作</th>
+					</tr>
+				</thead>
+				<tbody>
+				<c:forEach items="${"$"}{list}" var="row">
+					<tr id="${"$"}{row.id}" pId="${"$"}{row.pid}">
+					<#list table.columns as c>
+						<#if c.list?? && c.list == "1"><td>${"$"}{row.${c.javaField}}</td></#if>
+					</#list>
+						<td>
+						<shiro:hasPermission name="${moduleName}:${ClassName?uncap_first}:save">
+							<input onclick="editRow('${"$"}{row.id}');" value="修改" class="btn btn-primary size-MINI radius" type="button">
+							<input onclick="addChildRow('${"$"}{row.id}');" value="添加子菜单" class="btn btn-primary size-MINI radius" type="button">
+						</shiro:hasPermission>
+						<shiro:hasPermission name="${moduleName}:${ClassName?uncap_first}:del">
+							<input onclick="deleteRow('${"$"}{row.id}');" value="删除" class="btn btn-primary size-MINI radius" type="button">
+						</shiro:hasPermission>
+						</td>
+					</tr>
+				</c:forEach>
+				</tbody>
+			</table>
+		</div>
+		<script type="text/javascript">
+			$(function(){
+				$("#treeTable").treeTable({expandLevel : 5});
+			});
+
+		 	function viewRow(id) {
+				var index = layer.open({
+				    type: 2,
+				    content: '${"$"}{ctx}/${ClassName?uncap_first}/form?id='+id,
+				    area: ['320px', '195px'],
+				    maxmin: true,
+					end: function(){
+						location.reload();
+					}
+				});
+				layer.full(index);
+		 	}
+
+			function addChildRow(pid) {
+				var index = layer.open({
+					type: 2,
+					title:"菜单新增",
+					content: '${"$"}{ctx}/${ClassName?uncap_first}/form?pid='+pid,
+					area: ['320px', '195px'],
+					maxmin: true,
+					end: function(){
+						location.reload();
+					}
+				});
+				layer.full(index);
+			}
+
+		 	function editRow(id) {
+				var index = layer.open({
+					type: 2,
+					content: '${"$"}{ctx}/${ClassName?uncap_first}/form?id='+id,
+					area: ['320px', '195px'],
+					maxmin: true,
+					end: function(){
+						location.reload();
+					}
+				});
+				layer.full(index);
+		 	}
+
+		 	function deleteRow(id) {
+				layer.confirm('确认删除吗？', {
+					btn: ['确认','取消'] //按钮
+				}, function(){
+					$.ajax({
+						url: "${"$"}{ctx}/${ClassName?uncap_first}/del",
+						data:{"id":id} ,
+						dataType: "json",
+						success: function (res) {
+							if (res.ok) {
+								layer.msg('删除成功', {icon: 6,end:function(){location.reload();}});
+							} else {
+								layer.msg("删除失败，请稍后再试！");
+							}
+						}
+					});
+				});
+		 	}
+
+		</script>
+	</body>
+</html>
+]]>
+	</content>
+</template>

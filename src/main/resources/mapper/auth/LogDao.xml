@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bing.water.auth.dao.LogDao">
+    
+	<sql id="LogColumns">
+		a.id AS "id",a.type AS "type",a.user_id AS "userId",a.create_date AS "createDate",a.remote_ip AS "remoteIp",a.user_agent AS "userAgent",a.request_uri AS "requestUri",a.method AS "method",a.params AS "params",a.exception AS "exception",a.title AS "title",a.run_time AS "runTime"
+	</sql>
+
+	<select id="get" resultType="com.bing.water.auth.entity.Log">
+		SELECT 
+			<include refid="LogColumns"/>
+		FROM sys_log a
+		WHERE a.id = #{id}
+	</select>
+
+	<select id="findAll" resultType="com.bing.water.auth.entity.Log">
+		SELECT 
+			<include refid="LogColumns"/>
+		FROM sys_log a
+		<where>
+			
+		</where>		
+	</select>
+	<!-- 分页模块 -->
+	<sql id="pageFromAndWhere">
+      FROM sys_log a
+      <where>
+		
+		<if test="type != null and type != ''">
+		AND a.type = #{type}
+		</if>
+		<if test="beginCreateDate != null">
+		AND a.create_date &gt;= #{beginCreateDate}
+		</if>
+		<if test="endCreateDate != null">
+		AND a.create_date &lt; #{endCreateDate}
+		</if>
+	  </where>
+    </sql>
+
+    <select id="pageCount" resultType="java.lang.Integer"
+            parameterType="com.bing.water.common.model.DtGridSearch">
+        select count(1)
+        <include refid="pageFromAndWhere"/>
+    </select>
+
+    <select id="pageList" resultType="com.bing.water.auth.entity.Log"
+            parameterType="com.bing.water.common.model.DtGridSearch">
+        select
+			<include refid="LogColumns"/>
+        <include refid="pageFromAndWhere"/>
+		<choose>
+			<when test="sort != null and sort != ''">
+				ORDER BY ${sort}
+			</when>
+			<otherwise>
+				ORDER BY create_date DESC
+			</otherwise>
+		</choose>
+        limit #{startRecord},#{pageSize}
+    </select>
+	
+	<insert id="insert">
+		INSERT INTO sys_log(
+		id,type,user_id,create_date,remote_ip,user_agent,request_uri,method,params,exception,title,run_time
+		) VALUES (
+		#{id},#{type},#{userId},#{createDate},#{remoteIp},#{userAgent},#{requestUri},#{method},#{params},#{exception},#{title},#{runTime}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE sys_log SET
+		id = #{id},type = #{type},user_id = #{userId},create_date = #{createDate},remote_ip = #{remoteIp},user_agent = #{userAgent},request_uri = #{requestUri},method = #{method},params = #{params},exception = #{exception},title = #{title},run_time = #{runTime}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		DELETE FROM sys_log
+	    WHERE id = #{id}
+	</update>
+	
+</mapper>

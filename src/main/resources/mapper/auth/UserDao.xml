@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bing.water.auth.dao.UserDao">
+    
+	<sql id="UserColumns">
+		a.id AS "id",a.username AS "username",a.password AS "password",a.name AS "name",a.org_code AS "orgCode",
+		a.job_no AS "jobNo",a.idcard AS "idcard",a.phone AS "phone",a.intro AS "intro",a.del_flag AS "delFlag",
+		a.create_date AS "createDate",a.create_by AS "createBy",a.update_date AS "updateDate",
+		a.update_by AS "updateBy",a.remarks AS "remarks"
+	</sql>
+
+	<select id="get" resultType="com.bing.water.auth.entity.User">
+		SELECT 
+			<include refid="UserColumns"/>
+		FROM sys_user a
+		WHERE a.id = #{id}
+	</select>
+
+	<select id="findByOrgCodeAndJobNo" resultType="com.bing.water.auth.entity.User">
+		SELECT
+		<include refid="UserColumns"/>
+		FROM sys_user a
+		<where>
+			a.del_flag = '0' AND a.org_code = #{orgCode} AND a.job_no = #{jobNo}
+		</where>
+	</select>
+
+	<select id="findByOrgCode" resultType="com.bing.water.auth.entity.User">
+		SELECT
+		<include refid="UserColumns"/>
+		FROM sys_user a
+		<where>
+			a.del_flag = '0' AND a.org_code = #{orgCode}
+		</where>
+	</select>
+
+	<select id="findAll" resultType="com.bing.water.auth.entity.User">
+		SELECT 
+			<include refid="UserColumns"/>
+		FROM sys_user a
+		<where>
+			a.del_flag = '0'
+		</where>		
+			ORDER BY a.update_date DESC
+	</select>
+
+	<select id="findByUsername" resultType="com.bing.water.auth.entity.User">
+		SELECT
+		<include refid="UserColumns"/>
+		FROM sys_user a
+		WHERE a.username = #{username} and a.del_flag = '0'
+	</select>
+
+	<!-- 分页模块 -->
+	<sql id="pageFromAndWhere">
+		<where>
+			a.del_flag = '0'
+			<if test="username != null and username != ''">
+				AND a.username LIKE concat('%',#{username},'%')
+			</if>
+			<if test="name != null and name != ''">
+				AND a.name LIKE concat('%',#{name},'%')
+			</if>
+			<choose>
+				<when test="orgCode != null and orgCode != ''">AND a.org_code = #{orgCode}</when>
+				<otherwise>
+					<if test="orgCodes != null and orgCodes.size > 0">
+						AND a.org_code IN
+						<foreach collection="orgCodes" open="(" close=")" separator="," item="code">
+							#{code}
+						</foreach>
+					</if>
+				</otherwise>
+			</choose>
+			<if test="jobNo != null and jobNo != ''">
+				AND a.job_no = #{jobNo}
+			</if>
+			<if test="idcard != null and idcard != ''">
+				AND a.idcard = #{idcard}
+			</if>
+			<if test="roleId != null and roleId != ''">
+				AND EXISTS (SELECT 1 FROM sys_role_user t WHERE t.user_id = a.id AND t.role_id = #{roleId})
+			</if>
+			<if test="notInRole != null and notInRole != ''">
+				AND NOT EXISTS (SELECT 1 FROM sys_role_user t WHERE t.user_id = a.id AND t.role_id = #{notInRole})
+			</if>
+		</where>
+    </sql>
+
+    <select id="pageCount" resultType="java.lang.Integer"
+            parameterType="com.bing.water.common.model.DtGridSearch">
+        select count(1)
+		FROM sys_user a
+        <include refid="pageFromAndWhere"/>
+    </select>
+
+    <select id="pageList" resultType="com.bing.water.auth.entity.User"
+            parameterType="com.bing.water.common.model.DtGridSearch">
+        select
+			<include refid="UserColumns"/>,o.name as "orgName"
+		FROM sys_user a
+		LEFT JOIN sys_organ o ON o.code = a.org_code
+        <include refid="pageFromAndWhere"/>
+		<choose>
+			<when test="sort != null and sort != ''">
+				ORDER BY ${sort}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+        limit #{startRecord},#{pageSize}
+    </select>
+	
+	<insert id="insert">
+		INSERT INTO sys_user(
+		id,username,password,name,org_code,job_no,idcard,phone,
+		intro,del_flag,create_date,create_by,update_date,update_by,remarks
+		) VALUES (
+		#{id},#{username},#{password},#{name},#{orgCode},#{jobNo},#{idcard},
+		#{phone},#{intro},#{delFlag},#{createDate},
+		#{createBy},#{updateDate},#{updateBy},#{remarks}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE sys_user SET
+		id = #{id},username = #{username},password = #{password},name = #{name},org_code = #{orgCode},
+		job_no = #{jobNo},idcard = #{idcard},
+		phone = #{phone},intro = #{intro},del_flag = #{delFlag},create_date = #{createDate},
+		create_by = #{createBy},update_date = #{updateDate},update_by = #{updateBy},remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+
+	<update id="changePassword" parameterType="java.lang.String">
+		UPDATE sys_user SET password = #{password} WHERE id = #{userId}
+	</update>
+	
+	<update id="delete">
+	    UPDATE sys_user SET del_flag = '1' WHERE id = #{id}
+	</update>
+
+	<insert id="insertRoleUser">
+		INSERT INTO sys_role_user(role_id,user_id) VALUES (#{roleId},#{userId})
+	</insert>
+
+	<update id="deleteRoleUser">
+		DELETE FROM sys_role_user WHERE user_id = #{userId}
+	</update>
+
+	<update id="updateWdyId">
+		UPDATE sys_user SET wdy_id = #{wdyId} WHERE id = #{userId}
+	</update>
+
+	<select id="findRoleIdsByUserId" resultType="java.lang.String">
+		SELECT role_id FROM sys_role_user WHERE user_id = #{userId}
+	</select>
+
+</mapper>

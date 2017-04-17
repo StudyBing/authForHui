@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bing.water.auth.dao.MenuDao">
+
+    <sql id="MenuColumns">
+		a.id AS "id",a.pid AS "pid",a.name AS "name",a.href AS "href",a.target AS "target",a.icon AS "icon",a.permission AS "permission",a.display AS "display",a.sort AS "sort",a.del_flag AS "delFlag",a.create_date AS "createDate",a.create_by AS "createBy",a.update_date AS "updateDate",a.update_by AS "updateBy",a.remarks AS "remarks"
+	</sql>
+
+    <select id="get" resultType="com.bing.water.auth.entity.Menu">
+        SELECT
+        <include refid="MenuColumns"/>
+        FROM sys_menu a
+        WHERE a.id = #{id}
+    </select>
+
+    <select id="findAll" resultType="com.bing.water.auth.entity.Menu">
+        SELECT
+        <include refid="MenuColumns"/>
+        FROM sys_menu a
+        <where>
+            a.del_flag = '0'
+        </where>
+        ORDER BY a.update_date DESC
+    </select>
+    <select id="findChildren" resultType="com.bing.water.auth.entity.Menu">
+        SELECT
+        <include refid="MenuColumns"/>
+        FROM sys_menu a
+        <where>
+            a.del_flag = '0' AND a.pid = #{pid}
+        </where>
+        ORDER BY a.update_date DESC
+    </select>
+    <select id="findMainMenus" resultType="com.bing.water.auth.entity.Menu">
+        SELECT
+        <include refid="MenuColumns"/>
+        FROM sys_menu a
+        <where>
+            a.del_flag = '0' AND (a.pid is null or a.pid='' or a.pid='0')
+        </where>
+        ORDER BY a.sort
+    </select>
+
+    <select id="findByUserId" resultType="com.bing.water.auth.entity.Menu">
+        SELECT DISTINCT
+        <include refid="MenuColumns"/>
+        FROM sys_menu a
+        JOIN sys_role_menu m ON m.menu_id = a.id
+        JOIN sys_role_user u ON m.role_id = u.role_id
+        WHERE a.del_flag='0' AND u.user_id=#{userId}
+        ORDER BY a.sort
+    </select>
+
+    <!-- 分页模块 -->
+    <sql id="pageFromAndWhere">
+        FROM sys_menu a
+        <where>
+            a.del_flag = '0'
+        </where>
+    </sql>
+
+    <select id="pageCount" resultType="java.lang.Integer"
+            parameterType="com.bing.water.common.model.DtGridSearch">
+        select count(1)
+        <include refid="pageFromAndWhere"/>
+    </select>
+
+    <select id="pageList" resultType="com.bing.water.auth.entity.Menu"
+            parameterType="com.bing.water.common.model.DtGridSearch">
+        select
+        <include refid="MenuColumns"/>
+        <include refid="pageFromAndWhere"/>
+        <choose>
+            <when test="sort != null and sort != ''">
+                ORDER BY ${sort}
+            </when>
+            <otherwise>
+                ORDER BY a.update_date DESC
+            </otherwise>
+        </choose>
+        limit #{startRecord},#{pageSize}
+    </select>
+
+    <insert id="insert">
+		INSERT INTO sys_menu(
+		id,pid,name,href,target,icon,permission,display,sort,del_flag,create_date,create_by,update_date,update_by,remarks
+		) VALUES (
+		#{id},#{pid},#{name},#{href},#{target},#{icon},#{permission},#{display},#{sort},#{delFlag},#{createDate},#{createBy},#{updateDate},#{updateBy},#{remarks}
+		)
+	</insert>
+
+    <update id="update">
+		UPDATE sys_menu SET
+		id = #{id},pid = #{pid},name = #{name},href = #{href},target = #{target},icon = #{icon},permission = #{permission},display = #{display},sort = #{sort},del_flag = #{delFlag},create_date = #{createDate},create_by = #{createBy},update_date = #{updateDate},update_by = #{updateBy},remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+
+    <update id="delete">
+	    UPDATE sys_menu SET del_flag = '1'
+	    WHERE id = #{id}
+	</update>
+
+    <update id="deleteChildren">
+        UPDATE sys_menu SET del_flag = '1'
+        WHERE id = #{id}
+        <if test="children != null and children.size()>0">
+            OR id in
+            <foreach collection="children" open="(" close=")" item="cid" separator=",">
+                #{cid.id}
+            </foreach>
+        </if>
+    </update>
+</mapper>
